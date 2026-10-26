@@ -13,3 +13,12 @@ form {
     align-items: center;
     gap: 10px;
 }
+
+.transactions-button {
+    background-color: #1d4ed8;
+    color: white;
+    padding: 12px 20px;
+    margin-top: 16px;
+    border-radius: 6px;
+    text-decoration: none;
+}
