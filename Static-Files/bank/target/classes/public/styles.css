@@ -1,3 +1,4 @@
+
 body {
     display: flex;
     flex-direction: column;
@@ -5,7 +6,47 @@ body {
     align-items: center;
     min-height: 100vh;
     margin: 0;
+    padding-left: 180px;
+    box-sizing: border-box;
 }
+
+.site-nav {
+    
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 180px;
+    height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 24px 16px;
+    background-color: #022586;
+}
+
+.site-nav a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.site-nav a:hover {
+    background-color: #4cd3dd;
+    color: white;
+    text-decoration: none;
+}
+
+.back-to-account {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+}
+
+
 
 form {
     display: flex;
@@ -15,10 +56,71 @@ form {
 }
 
 .transactions-button {
+    display: inline-block;
     background-color: #1d4ed8;
     color: white;
+    border: 0;
     padding: 12px 20px;
     margin-top: 16px;
     border-radius: 6px;
     text-decoration: none;
+    font: inherit;
+    cursor: pointer;
+}
+
+.content {
+    width: 90%;
+    max-width: 640px;
+    padding: 24px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.transactions-table {
+    width: 100%;
+    margin-top: 16px;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.transactions-table th,
+.transactions-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #dbe3ef;
+}
+
+.transactions-table th {
+    background-color: #eff6ff;
+    color: #1e3a8a;
+}
+
+.transactions-table th:first-child {
+    width: 70%;
+}
+
+.transactions-table td:first-child {
+    overflow-wrap: anywhere;
+}
+
+.transactions-table th:last-child,
+.transactions-table td:last-child {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.transactions-table a {
+    color: #1d4ed8;
+}
+
+.transactions-table tfoot th,
+.transactions-table tfoot td {
+    border-top: 2px solid #dbe3ef;
+    background-color: #eff6ff;
+    color: #1e3a8a;
+    font-weight: bold;
+}
+
+.content form {
+    margin-bottom: 24px;
 }
