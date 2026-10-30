@@ -8,6 +8,8 @@ import io.javalin.http.staticfiles.Location;
 public class App {
 
   public static void main(String[] args) {
+    TransactionsController controller = new TransactionsController();
+
     Javalin.create(
             config -> {
               config.staticFiles.add("/public", Location.CLASSPATH);
@@ -28,7 +30,9 @@ public class App {
                     path(
                         "/transactions",
                         () -> {
-                          crud("/{id}", new TransactionsController());
+                          crud("/{id}", controller);
+                          post("/{id}/update", ctx -> controller.update(ctx, ctx.pathParam("id")));
+                          post("/{id}/delete", ctx -> controller.delete(ctx, ctx.pathParam("id")));
                         });
                   });
             })
