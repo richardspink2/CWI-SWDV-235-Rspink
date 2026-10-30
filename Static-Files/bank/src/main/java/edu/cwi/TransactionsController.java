@@ -21,69 +21,9 @@ public class TransactionsController implements CrudHandler {
         total += Double.parseDouble(amount);
       }
     }
-    ctx.html(
-        html(
-                head(
-                    title("Bank Transactions"),
-                    link().withRel("stylesheet").withHref("/styles.css")),
-                body(
-                    nav(
-                        attrs(".site-nav"),
-                        a("Home").withHref("/"),
-                        a("Account").withHref("/account.html"),
-                        a("Transactions").withHref("/transactions")),
-                    main(
-                        attrs("#main.content"),
-                        a("Back to account").withHref("/account.html").withClass("back-to-account"),
-                        h2("Transactions"),
-                        form()
-                            .withMethod("post")
-                            .withAction("/transactions")
-                            .with(
-                                label("Create Transaction").withFor("Description"),
-                                input()
-                                    .withType("text")
-                                    .withId("Description")
-                                    .withName("description")
-                                    .withPlaceholder("Description")
-                                    .isRequired(),
-                                label("Amount").withFor("Amount"),
-                                input()
-                                    .withType("number")
-                                    .attr("step", "0.01")
-                                    .withId("Amount")
-                                    .withName("amount")
-                                    .withPlaceholder("Amount")
-                                    .isRequired(),
-                                button("Create Transaction")
-                                    .withType("submit")
-                                    .withClass("transactions-button")),
-                        p("Choose a transaction to view, update, or delete."),
-                        table(
-                            attrs(".transactions-table"),
-                            thead(
-                                tr(
-                                    th("Name").attr("scope", "col"),
-                                    th("Amount").attr("scope", "col"))),
-                            tbody(
-                                each(
-                                    transactions.entrySet(),
-                                    transaction ->
-                                        tr(
-                                            td(
-                                                a(transaction.getValue())
-                                                    .withHref(
-                                                        "/transactions/" + transaction.getKey())),
-                                            td(
-                                                String.format(
-                                                    "$%,.2f",
-                                                    Double.parseDouble(
-                                                        amounts.get(transaction.getKey()))))))),
-                            tfoot(
-                                tr(
-                                    th("Total").attr("scope", "row"),
-                                    td(String.format("$%,.2f", total))))))))
-            .render());
+    ctx.render(
+        "jte/transactionsPage.jte",
+        Map.of("transactions", transactions, "amounts", amounts, "total", total));
   }
 
   @Override

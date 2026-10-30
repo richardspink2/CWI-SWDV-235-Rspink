@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuite tests="1" failures="0" name="edu.cwi.AppTest" time="0.001" errors="0" skipped="0">
+<testsuite tests="1" failures="0" name="edu.cwi.AppTest" time="0.002" errors="0" skipped="0">
   <properties>
     <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
     <property name="java.vm.version" value="17.0.20.1+1"/>
@@ -43,7 +43,7 @@
     <property name="java.class.path" value="C:\Users\Richard\.m2\wrapper\dists\apache-maven-3.6.3-bin\1iopthnavndlasol9gbrbg6bf2\apache-maven-3.6.3\bin\..\boot\plexus-classworlds-2.6.0.jar"/>
     <property name="java.vm.specification.version" value="17"/>
     <property name="sun.arch.data.model" value="64"/>
-    <property name="sun.java.command" value="org.codehaus.plexus.classworlds.launcher.Launcher -o -f D:\Adv Web Dev\CWI-SWDV-235-Rspink\Static-Files\bank\pom.xml test"/>
+    <property name="sun.java.command" value="org.codehaus.plexus.classworlds.launcher.Launcher -o -f D:\Adv Web Dev\CWI-SWDV-235-Rspink\Static-Files\bank\pom.xml clean test"/>
     <property name="java.home" value="C:\Users\Richard\.jdks\jdk-17.0.20.1+1"/>
     <property name="user.language" value="en"/>
     <property name="java.specification.vendor" value="Oracle Corporation"/>
@@ -61,5 +61,5 @@
     <property name="java.vendor.version" value="Temurin-17.0.20.1+1"/>
     <property name="sun.cpu.isalist" value="amd64"/>
   </properties>
-  <testcase classname="edu.cwi.AppTest" name="shouldAnswerWithTrue" time="0.001"/>
+  <testcase classname="edu.cwi.AppTest" name="shouldAnswerWithTrue" time="0.002"/>
 </testsuite>
