@@ -31,6 +31,7 @@ public class App {
                 path(
                     "/transactions",
                     () -> {
+                      get("/manage", controller::showTransactions);
                       crud("/{id}", controller);
                       post("/{id}/update", ctx -> controller.update(ctx, ctx.pathParam("id")));
                       post("/{id}/delete", ctx -> controller.delete(ctx, ctx.pathParam("id")));

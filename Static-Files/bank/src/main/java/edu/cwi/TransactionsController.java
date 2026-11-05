@@ -21,9 +21,35 @@ public class TransactionsController implements CrudHandler {
         total += Double.parseDouble(amount);
       }
     }
+    UserAccount account = new UserAccount("Rocky Balboa", total, transactions);
+    ctx.render(
+        "jte/accountPage.jte",
+        Map.of(
+            "title", "Account transactions",
+            "account", account,
+            "amounts", amounts,
+            "total", total));
+  }
+
+  private void renderTransactionsPage(Context ctx) {
+    double total = 0;
+
+    for (String amount : amounts.values()) {
+      if (!amount.isEmpty()) {
+        total += Double.parseDouble(amount);
+      }
+    }
+
     ctx.render(
         "jte/transactionsPage.jte",
-        Map.of("transactions", transactions, "amounts", amounts, "total", total));
+        Map.of(
+            "transactions", transactions,
+            "amounts", amounts,
+            "total", total));
+  }
+
+  public void showTransactions(Context ctx) {
+    renderTransactionsPage(ctx);
   }
 
   @Override
@@ -41,8 +67,7 @@ public class TransactionsController implements CrudHandler {
                       nav(
                           attrs(".site-nav"),
                           a("Home").withHref("/"),
-                          a("Account").withHref("/account.html"),
-                          a("Transactions").withHref("/transactions")),
+                          a("Account").withHref("/account.html")),
                       main(
                           attrs("#main.content"),
                           h1("Transaction " + resourceId),
@@ -77,7 +102,7 @@ public class TransactionsController implements CrudHandler {
                                   button("Delete transaction")
                                       .withType("submit")
                                       .withClass("transactions-button")),
-                          a("All transactions").withHref("/transactions"))))
+                          a("All transactions").withHref("/transactions/manage"))))
               .render());
     } else {
       ctx.status(404).result("Transaction not found");
@@ -100,7 +125,7 @@ public class TransactionsController implements CrudHandler {
     transactions.put(id, body);
     amounts.put(id, amount);
 
-    getAll(ctx);
+    renderTransactionsPage(ctx);
   }
 
   @Override
@@ -117,7 +142,7 @@ public class TransactionsController implements CrudHandler {
         amounts.put(resourceId, amount);
       }
 
-      getAll(ctx);
+      renderTransactionsPage(ctx);
     } else {
       ctx.status(404).result("Transaction not found");
     }
@@ -129,6 +154,6 @@ public class TransactionsController implements CrudHandler {
     transactions.remove(resourceId);
     amounts.remove(resourceId);
 
-    getAll(ctx);
+    renderTransactionsPage(ctx);
   }
 }

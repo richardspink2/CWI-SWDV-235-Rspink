@@ -18,7 +18,6 @@
     <nav class="site-nav">
       <a href="/">Home</a>
       <a href="/account.html">Account</a>
-      <a href="/transactions">Transactions</a>
     </nav>
 
     <main id="main" class="content">
