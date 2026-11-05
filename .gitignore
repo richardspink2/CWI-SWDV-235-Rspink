@@ -1,0 +1,3 @@
+# Maven and JTE build output
+**/target/
+**/jte-classes/
