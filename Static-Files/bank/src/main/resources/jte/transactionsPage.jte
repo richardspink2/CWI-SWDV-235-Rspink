@@ -17,11 +17,12 @@
   <body>
     <nav class="site-nav">
       <a href="/">Home</a>
-      <a href="/account.html">Account</a>
+      <a href="/account">Account</a>
+      <a href="/logout">Log Out</a>
     </nav>
 
     <main id="main" class="content">
-      <a href="/account.html" class="back-to-account">Back to account</a>
+      <a href="/account" class="back-to-account">Back to account</a>
       <h2>Transactions</h2>
 
       <form method="post" action="/transactions">
