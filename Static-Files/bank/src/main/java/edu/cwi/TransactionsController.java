@@ -4,7 +4,9 @@ import static j2html.TagCreator.*;
 
 import io.javalin.apibuilder.CrudHandler;
 import io.javalin.http.Context;
+import io.javalin.http.UnauthorizedResponse;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TransactionsController implements CrudHandler {
@@ -14,21 +16,23 @@ public class TransactionsController implements CrudHandler {
 
   @Override
   public void getAll(Context ctx) {
-    double total = 0;
+    String userId = ctx.cookieStore().get("user-id");
+    Optional<UserAccount> user = AuthController.getUser(userId);
 
-    for (String amount : amounts.values()) {
-      if (!amount.isEmpty()) {
-        total += Double.parseDouble(amount);
-      }
+    if (user.isEmpty()) {
+      throw new UnauthorizedResponse();
     }
-    UserAccount account = new UserAccount("Rocky Balboa", total, transactions);
+
+    UserAccount account = user.get();
+    Map<String, String> accountAmounts = Map.of("1", String.valueOf(account.balance()));
+
     ctx.render(
         "jte/accountPage.jte",
         Map.of(
             "title", "Account transactions",
             "account", account,
-            "amounts", amounts,
-            "total", total));
+            "amounts", accountAmounts,
+            "total", account.balance()));
   }
 
   private void renderTransactionsPage(Context ctx) {
@@ -67,7 +71,8 @@ public class TransactionsController implements CrudHandler {
                       nav(
                           attrs(".site-nav"),
                           a("Home").withHref("/"),
-                          a("Account").withHref("/account.html")),
+                          a("Account").withHref("/account"),
+                          a("Log Out").withHref("/logout")),
                       main(
                           attrs("#main.content"),
                           h1("Transaction " + resourceId),
