@@ -12,11 +12,13 @@ public class App {
 
   public static void main(String[] args) {
     TransactionsController controller = new TransactionsController();
+    UsersController usersController = new UsersController();
 
     Javalin.create(
             config -> {
               config.staticFiles.add("/public", Location.CLASSPATH);
               config.fileRenderer(new JavalinJte());
+              // auth Config
               config.routes.beforeMatched(ctx -> {
                 if (ctx.routeRoles().isEmpty()) {
                   return;
@@ -49,6 +51,12 @@ public class App {
                       crud("/{id}", controller);
                       post("/{id}/update", ctx -> controller.update(ctx, ctx.pathParam("id")));
                       post("/{id}/delete", ctx -> controller.delete(ctx, ctx.pathParam("id")));
+                    });
+                path(
+                    "/users",
+                    List.of(AppRole.ADMIN),
+                    () -> {
+                      crud("/{id}", usersController);
                     });
               });
             })
