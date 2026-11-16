@@ -39,10 +39,15 @@ public class App {
               config.routes.get("/logout", AuthController::logout);
               config.routes.apiBuilder(() -> {
                 path(
+                    "/accounts",
+                    List.of(AppRole.CUSTOMER),
+                    () -> get(controller::showAccounts));
+                path(
                     "/account",
                     List.of(AppRole.CUSTOMER),
                     () -> {
                       get(controller::getAll);
+                      get("/{id}", controller::showAccount);
                     });
                 path(
                     "/transactions",
