@@ -21,7 +21,7 @@
     @for(var entry : transactions.entrySet())
         <tr>
             <td>
-                <a href="/transactions/${entry.getKey()}">${entry.getValue()}</a>
+                <a href="/transactions/${entry.getKey()}?source=account">${entry.getValue()}</a>
             </td>
             <td>${String.format("$%,.2f", Double.parseDouble(amounts.get(entry.getKey())))}</td>
         </tr>

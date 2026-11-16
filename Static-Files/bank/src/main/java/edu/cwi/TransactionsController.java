@@ -2,12 +2,20 @@ package edu.cwi;
 
 import static j2html.TagCreator.*;
 
+import edu.cwi.data.Account;
+import edu.cwi.data.AccountMapper;
+import edu.cwi.data.MyBatisConfig;
+import edu.cwi.data.Transaction;
+import edu.cwi.data.TransactionMapper;
+import edu.cwi.data.User;
+import edu.cwi.data.UserMapper;
 import io.javalin.apibuilder.CrudHandler;
 import io.javalin.http.Context;
 import io.javalin.http.UnauthorizedResponse;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import org.apache.ibatis.session.SqlSession;
 
 public class TransactionsController implements CrudHandler {
 
@@ -16,23 +24,52 @@ public class TransactionsController implements CrudHandler {
 
   @Override
   public void getAll(Context ctx) {
-    String userId = ctx.cookieStore().get("user-id");
-    Optional<UserAccount> user = AuthController.getUser(userId);
-
-    if (user.isEmpty()) {
+    Object userId = ctx.cookieStore().get("user-id");
+    if (!(userId instanceof Integer)) {
       throw new UnauthorizedResponse();
     }
 
-    UserAccount account = user.get();
-    Map<String, String> accountAmounts = Map.of("1", String.valueOf(account.balance()));
+    try (SqlSession session = MyBatisConfig.getSqlSessionFactory().openSession()) {
+      UserMapper userMapper = session.getMapper(UserMapper.class);
+      User user = userMapper.getById((Integer) userId);
+      if (user == null || !AppRole.CUSTOMER.name().equals(user.getRole())) {
+        throw new UnauthorizedResponse();
+      }
 
-    ctx.render(
-        "jte/accountPage.jte",
-        Map.of(
-            "title", "Account transactions",
-            "account", account,
-            "amounts", accountAmounts,
-            "total", account.balance()));
+      AccountMapper accountMapper = session.getMapper(AccountMapper.class);
+      Account bankAccount = accountMapper.getByUserId(user.getId());
+      Map<String, String> accountTransactions = new LinkedHashMap<>();
+      Map<String, String> accountAmounts = new LinkedHashMap<>();
+      double balance = 0;
+
+      if (bankAccount != null) {
+        balance = bankAccount.getBalance().doubleValue();
+        TransactionMapper transactionMapper = session.getMapper(TransactionMapper.class);
+        for (Transaction transaction : transactionMapper.getByAccountId(bankAccount.getId())) {
+          String id = String.valueOf(transaction.getId());
+          String description = transaction.getDescription();
+          if (description == null || description.isBlank()) {
+            description = transaction.getTransactionType().name();
+          }
+          accountTransactions.put(id, description);
+          accountAmounts.put(id, transaction.getAmount().toPlainString());
+        }
+      }
+
+      UserAccount account = new UserAccount(
+          String.valueOf(user.getId()),
+          user.getFirstName() + " " + user.getLastName(),
+          AppRole.CUSTOMER,
+          balance,
+          accountTransactions);
+      ctx.render(
+          "jte/accountPage.jte",
+          Map.of(
+              "title", "Account transactions",
+              "account", account,
+              "amounts", accountAmounts,
+              "total", account.balance()));
+    }
   }
 
   private void renderTransactionsPage(Context ctx) {
@@ -58,6 +95,10 @@ public class TransactionsController implements CrudHandler {
 
   @Override
   public void getOne(Context ctx, String resourceId) {
+    if ("account".equals(ctx.queryParam("source"))) {
+      showAccountTransaction(ctx, resourceId);
+      return;
+    }
 
     String user = transactions.get(resourceId);
 
@@ -112,6 +153,49 @@ public class TransactionsController implements CrudHandler {
     } else {
       ctx.status(404).result("Transaction not found");
     }
+  }
+
+  private void showAccountTransaction(Context ctx, String resourceId) {
+    Object userId = ctx.cookieStore().get("user-id");
+    if (!(userId instanceof Integer) || !"CUSTOMER".equals(ctx.cookieStore().get("user-role"))) {
+      throw new UnauthorizedResponse();
+    }
+
+    try (SqlSession session = MyBatisConfig.getSqlSessionFactory().openSession()) {
+      AccountMapper accountMapper = session.getMapper(AccountMapper.class);
+      Account account = accountMapper.getByUserId((Integer) userId);
+      if (account != null) {
+        TransactionMapper transactionMapper = session.getMapper(TransactionMapper.class);
+        for (Transaction transaction : transactionMapper.getByAccountId(account.getId())) {
+          if (String.valueOf(transaction.getId()).equals(resourceId)) {
+            String description = transaction.getDescription();
+            if (description == null || description.isBlank()) {
+              description = transaction.getTransactionType().name();
+            }
+            ctx.html(
+                html(
+                        head(
+                            title("Transaction " + resourceId),
+                            link().withRel("stylesheet").withHref("/styles.css")),
+                        body(
+                            nav(
+                                attrs(".site-nav"),
+                                a("Home").withHref("/"),
+                                a("Account").withHref("/account"),
+                                a("Log Out").withHref("/logout")),
+                            main(
+                                attrs("#main.content"),
+                                h1("Transaction " + resourceId),
+                                p(description),
+                                p(String.format("Amount: $%,.2f", transaction.getAmount())),
+                                a("Back to account").withHref("/account"))))
+                    .render());
+            return;
+          }
+        }
+      }
+    }
+    ctx.status(404).result("Transaction not found");
   }
 
   @Override
