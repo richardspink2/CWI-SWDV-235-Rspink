@@ -24,52 +24,102 @@ public class TransactionsController implements CrudHandler {
 
   @Override
   public void getAll(Context ctx) {
-    Object userId = ctx.cookieStore().get("user-id");
-    if (!(userId instanceof Integer)) {
-      throw new UnauthorizedResponse();
+    int userId = getCustomerId(ctx);
+    try (SqlSession session = MyBatisConfig.getSqlSessionFactory().openSession()) {
+      User user = getCustomer(session, userId);
+      AccountMapper accountMapper = session.getMapper(AccountMapper.class);
+      renderAccount(ctx, session, user, accountMapper.getByUserId(userId));
+    }
+  }
+
+  public void showAccounts(Context ctx) {
+    int userId = getCustomerId(ctx);
+    try (SqlSession session = MyBatisConfig.getSqlSessionFactory().openSession()) {
+      User user = getCustomer(session, userId);
+      AccountMapper accountMapper = session.getMapper(AccountMapper.class);
+      ctx.render(
+          "jte/accountsPage.jte",
+          Map.of(
+              "name", user.getFirstName() + " " + user.getLastName(),
+              "accounts", accountMapper.getAllByUserId(userId)));
+    }
+  }
+
+  public void showAccount(Context ctx) {
+    int userId = getCustomerId(ctx);
+    int accountId;
+    try {
+      accountId = Integer.parseInt(ctx.pathParam("id"));
+    } catch (NumberFormatException ex) {
+      ctx.status(404).result("Account not found");
+      return;
     }
 
     try (SqlSession session = MyBatisConfig.getSqlSessionFactory().openSession()) {
-      UserMapper userMapper = session.getMapper(UserMapper.class);
-      User user = userMapper.getById((Integer) userId);
-      if (user == null || !AppRole.CUSTOMER.name().equals(user.getRole())) {
-        throw new UnauthorizedResponse();
-      }
-
+      User user = getCustomer(session, userId);
       AccountMapper accountMapper = session.getMapper(AccountMapper.class);
-      Account bankAccount = accountMapper.getByUserId(user.getId());
-      Map<String, String> accountTransactions = new LinkedHashMap<>();
-      Map<String, String> accountAmounts = new LinkedHashMap<>();
-      double balance = 0;
-
-      if (bankAccount != null) {
-        balance = bankAccount.getBalance().doubleValue();
-        TransactionMapper transactionMapper = session.getMapper(TransactionMapper.class);
-        for (Transaction transaction : transactionMapper.getByAccountId(bankAccount.getId())) {
-          String id = String.valueOf(transaction.getId());
-          String description = transaction.getDescription();
-          if (description == null || description.isBlank()) {
-            description = transaction.getTransactionType().name();
-          }
-          accountTransactions.put(id, description);
-          accountAmounts.put(id, transaction.getAmount().toPlainString());
-        }
+      Account bankAccount = accountMapper.getById(accountId);
+      if (bankAccount == null || bankAccount.getUserId() != userId) {
+        ctx.status(404).result("Account not found");
+        return;
       }
-
-      UserAccount account = new UserAccount(
-          String.valueOf(user.getId()),
-          user.getFirstName() + " " + user.getLastName(),
-          AppRole.CUSTOMER,
-          balance,
-          accountTransactions);
-      ctx.render(
-          "jte/accountPage.jte",
-          Map.of(
-              "title", "Account transactions",
-              "account", account,
-              "amounts", accountAmounts,
-              "total", account.balance()));
+      renderAccount(ctx, session, user, bankAccount);
     }
+  }
+
+  private int getCustomerId(Context ctx) {
+    Object userId = ctx.cookieStore().get("user-id");
+    if (!(userId instanceof Integer)
+        || !AppRole.CUSTOMER.name().equals(ctx.cookieStore().get("user-role"))) {
+      throw new UnauthorizedResponse();
+    }
+    return (Integer) userId;
+  }
+
+  private User getCustomer(SqlSession session, int userId) {
+    UserMapper userMapper = session.getMapper(UserMapper.class);
+    User user = userMapper.getById(userId);
+    if (user == null || !AppRole.CUSTOMER.name().equals(user.getRole())) {
+      throw new UnauthorizedResponse();
+    }
+    return user;
+  }
+
+  private void renderAccount(Context ctx, SqlSession session, User user, Account bankAccount) {
+    Map<String, String> accountTransactions = new LinkedHashMap<>();
+    Map<String, String> accountAmounts = new LinkedHashMap<>();
+    double balance = 0;
+    int accountNumber = 0;
+
+    if (bankAccount != null) {
+      accountNumber = bankAccount.getId();
+      balance = bankAccount.getBalance().doubleValue();
+      TransactionMapper transactionMapper = session.getMapper(TransactionMapper.class);
+      for (Transaction transaction : transactionMapper.getByAccountId(accountNumber)) {
+        String id = String.valueOf(transaction.getId());
+        String description = transaction.getDescription();
+        if (description == null || description.isBlank()) {
+          description = transaction.getTransactionType().name();
+        }
+        accountTransactions.put(id, description);
+        accountAmounts.put(id, transaction.getAmount().toPlainString());
+      }
+    }
+
+    UserAccount account = new UserAccount(
+        String.valueOf(user.getId()),
+        user.getFirstName() + " " + user.getLastName(),
+        AppRole.CUSTOMER,
+        balance,
+        accountTransactions);
+    ctx.render(
+        "jte/accountPage.jte",
+        Map.of(
+            "title", "Account transactions",
+            "account", account,
+            "accountNumber", accountNumber,
+            "amounts", accountAmounts,
+            "total", account.balance()));
   }
 
   private void renderTransactionsPage(Context ctx) {
@@ -112,7 +162,7 @@ public class TransactionsController implements CrudHandler {
                       nav(
                           attrs(".site-nav"),
                           a("Home").withHref("/"),
-                          a("Account").withHref("/account"),
+                          a("Accounts").withHref("/accounts"),
                           a("Log Out").withHref("/logout")),
                       main(
                           attrs("#main.content"),
@@ -156,46 +206,53 @@ public class TransactionsController implements CrudHandler {
   }
 
   private void showAccountTransaction(Context ctx, String resourceId) {
-    Object userId = ctx.cookieStore().get("user-id");
-    if (!(userId instanceof Integer) || !"CUSTOMER".equals(ctx.cookieStore().get("user-role"))) {
-      throw new UnauthorizedResponse();
+    int userId = getCustomerId(ctx);
+    int transactionId;
+    try {
+      transactionId = Integer.parseInt(resourceId);
+    } catch (NumberFormatException ex) {
+      ctx.status(404).result("Transaction not found");
+      return;
     }
 
     try (SqlSession session = MyBatisConfig.getSqlSessionFactory().openSession()) {
-      AccountMapper accountMapper = session.getMapper(AccountMapper.class);
-      Account account = accountMapper.getByUserId((Integer) userId);
-      if (account != null) {
-        TransactionMapper transactionMapper = session.getMapper(TransactionMapper.class);
-        for (Transaction transaction : transactionMapper.getByAccountId(account.getId())) {
-          if (String.valueOf(transaction.getId()).equals(resourceId)) {
-            String description = transaction.getDescription();
-            if (description == null || description.isBlank()) {
-              description = transaction.getTransactionType().name();
-            }
-            ctx.html(
-                html(
-                        head(
-                            title("Transaction " + resourceId),
-                            link().withRel("stylesheet").withHref("/styles.css")),
-                        body(
-                            nav(
-                                attrs(".site-nav"),
-                                a("Home").withHref("/"),
-                                a("Account").withHref("/account"),
-                                a("Log Out").withHref("/logout")),
-                            main(
-                                attrs("#main.content"),
-                                h1("Transaction " + resourceId),
-                                p(description),
-                                p(String.format("Amount: $%,.2f", transaction.getAmount())),
-                                a("Back to account").withHref("/account"))))
-                    .render());
-            return;
-          }
-        }
+      TransactionMapper transactionMapper = session.getMapper(TransactionMapper.class);
+      Transaction transaction = transactionMapper.getById(transactionId);
+      if (transaction == null) {
+        ctx.status(404).result("Transaction not found");
+        return;
       }
+
+      AccountMapper accountMapper = session.getMapper(AccountMapper.class);
+      Account account = accountMapper.getById(transaction.getAccountId());
+      if (account == null || account.getUserId() != userId) {
+        ctx.status(404).result("Transaction not found");
+        return;
+      }
+
+      String description = transaction.getDescription();
+      if (description == null || description.isBlank()) {
+        description = transaction.getTransactionType().name();
+      }
+      ctx.html(
+          html(
+                  head(
+                      title("Transaction " + resourceId),
+                      link().withRel("stylesheet").withHref("/styles.css")),
+                  body(
+                      nav(
+                          attrs(".site-nav"),
+                          a("Home").withHref("/"),
+                          a("Accounts").withHref("/accounts"),
+                          a("Log Out").withHref("/logout")),
+                      main(
+                          attrs("#main.content"),
+                          h1("Transaction " + resourceId),
+                          p(description),
+                          p(String.format("Amount: $%,.2f", transaction.getAmount())),
+                          a("Back to account").withHref("/account/" + account.getId()))))
+              .render());
     }
-    ctx.status(404).result("Transaction not found");
   }
 
   @Override

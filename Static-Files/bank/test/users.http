@@ -13,9 +13,9 @@ content-type: application/json
 Cookie: javalin-cookie-store=eyJ1c2VyLWlkIjoxLCJ1c2VyLXJvbGUiOiJBRE1JTiJ9
 
 {
-    "username": "test",
+    "username": "noke",
     "password": "yarToastMonkey",
-    "email": "test@test.com",
+    "email": "noke@test.com",
     "firstName": "RON",
     "lastName": "WEASLEY",
     "role": "CUSTOMER"

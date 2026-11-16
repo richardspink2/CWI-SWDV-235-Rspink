@@ -15,7 +15,7 @@
 <body>
     <nav class="site-nav">
         <a href="/">Home</a>
-        <a href="/account">Account</a>
+        <a href="/accounts">Accounts</a>
         <a href="/logout">Log Out</a>
     </nav>
 
