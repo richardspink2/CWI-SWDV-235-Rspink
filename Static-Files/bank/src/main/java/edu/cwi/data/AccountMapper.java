@@ -20,6 +20,14 @@ public interface AccountMapper {
           + " #{accountId}")
   Account getById(int accountId);
 
+  @Select(
+      "SELECT account_id as id, user_id, account_type, balance FROM accounts WHERE account_id ="
+          + " #{accountId} FOR UPDATE")
+  Account getByIdForUpdate(int accountId);
+
+  @Update("UPDATE accounts SET balance = #{balance} WHERE account_id = #{id}")
+  int updateBalance(Account account);
+
   @Insert("INSERT INTO accounts (user_id, balance) VALUES (#{userId}, #{balance})")
   @Options(useGeneratedKeys = true, keyProperty = "id")
   int insert(Account account);

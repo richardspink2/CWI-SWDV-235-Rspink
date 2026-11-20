@@ -38,10 +38,7 @@ public class App {
 
               config.routes.get("/logout", AuthController::logout);
               config.routes.apiBuilder(() -> {
-                path(
-                    "/accounts",
-                    List.of(AppRole.CUSTOMER),
-                    () -> get(controller::showAccounts));
+                path("/accounts", List.of(AppRole.CUSTOMER), () -> get(controller::showAccounts));
                 path(
                     "/account",
                     List.of(AppRole.CUSTOMER),
@@ -50,7 +47,12 @@ public class App {
                       get("/{id}", controller::showAccount);
                     });
                 path(
+                    "/transaction",
+                    List.of(AppRole.CUSTOMER),
+                    () -> post(controller::createAccountTransaction));
+                path(
                     "/transactions",
+                    List.of(AppRole.CUSTOMER),
                     () -> {
                       get("/manage", controller::showTransactions);
                       crud("/{id}", controller);
