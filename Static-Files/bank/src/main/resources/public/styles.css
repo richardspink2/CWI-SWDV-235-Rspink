@@ -124,3 +124,31 @@ form {
 .content form {
     margin-bottom: 24px;
 }
+
+.transactions-table th:nth-child(2),
+.transactions-table td:nth-child(2) {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.transaction-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.transactions-table .transaction-actions form {
+    margin: 0;
+}
+
+.transaction-actions button {
+    border: 1px solid #b91c1c;
+    border-radius: 4px;
+    padding: 4px 8px;
+    background: white;
+    color: #b91c1c;
+    font: inherit;
+    cursor: pointer;
+}

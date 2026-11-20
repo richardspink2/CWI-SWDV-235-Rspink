@@ -28,9 +28,6 @@
             ${detail}
         </section>
 
-        <a href="/transactions/manage" class="transactions-button">
-            Manage Transactions
-        </a>
     </main>
 </body>
 </html>

@@ -57,6 +57,14 @@ public class Transaction {
     return amount;
   }
 
+  public BigDecimal getSignedAmount() {
+    if (transactionType == TransactionType.WITHDRAWAL
+        || transactionType == TransactionType.TRANSFER_OUT) {
+      return amount.negate();
+    }
+    return amount;
+  }
+
   public void setAmount(BigDecimal amount) {
     this.amount = amount;
   }
